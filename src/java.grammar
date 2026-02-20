@@ -439,7 +439,7 @@ PackageDeclaration {
 }
 
 ImportDeclaration {
-  kw<"import"> kw<"static">? name ("." Asterisk)? ";"
+  kw<"import"> (kw<"static"> | kw<"module">)? name ("." Asterisk)? ";"
 }
 
 EnumDeclaration {
