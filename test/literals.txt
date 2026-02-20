@@ -28,12 +28,14 @@ Program(
 
 # octal integer literals
 
-0o123;
-0O123;
+0123;
+07;
+0777L;
 
 ==>
 
 Program(
+  ExpressionStatement(IntegerLiteral),
   ExpressionStatement(IntegerLiteral),
   ExpressionStatement(IntegerLiteral))
 

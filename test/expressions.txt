@@ -526,7 +526,7 @@ Program(
           LocalVariableDeclaration(
             TypeName,
             VariableDeclarator(Definition)),
-          SwitchStatement(switch,
+          SwitchExpression(switch,
             ParenthesizedExpression(Identifier),
             SwitchBlock(
               SwitchLabel(case,IntegerLiteral),

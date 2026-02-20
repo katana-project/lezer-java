@@ -2,14 +2,14 @@ import {styleTags, tags as t} from "@lezer/highlight"
 
 export const javaHighlighting = styleTags({
   null: t.null,
-    instanceof: t.operatorKeyword,
+  instanceof: t.operatorKeyword,
   this: t.self,
-  "new super assert open to with void": t.keyword,
-  "class interface extends implements enum var": t.definitionKeyword,
+  "new super assert open to with void yield when": t.keyword,
+  "class interface extends implements enum var record": t.definitionKeyword,
   "module package import": t.moduleKeyword,
   "switch while for if else case default do break continue return try catch finally throw": t.controlKeyword,
   ["requires exports opens uses provides public private protected static transitive abstract final " +
-   "strictfp synchronized native transient volatile throws"]: t.modifier,
+   "strictfp synchronized native transient volatile throws sealed non-sealed permits"]: t.modifier,
   IntegerLiteral: t.integer,
   FloatingPointLiteral: t.float,
   "StringLiteral TextBlock": t.string,

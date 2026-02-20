@@ -45,6 +45,8 @@ literal {
   TextBlock { textBlockStart textBlockContent* textBlockEnd }
 }
 
+// SwitchExpression is both an expression (rhs of assignment, etc.)
+// and a statement (switch { } without semicolon).
 expression[@isGroup=Expression] {
   AssignmentExpression |
   BinaryExpression |
@@ -54,7 +56,8 @@ expression[@isGroup=Expression] {
   UpdateExpression |
   baseExpression |
   UnaryExpression |
-  CastExpression
+  CastExpression |
+  SwitchExpression ~switch
 }
 
 CastExpression {
@@ -79,11 +82,30 @@ BinaryExpression {
 }
 
 InstanceofExpression {
-  expression !instanceof kw<"instanceof"> type
+  expression !instanceof kw<"instanceof"> (type | Pattern)
+}
+
+// Pattern matching: Type varName  OR  Type(components...)
+Pattern {
+  type annotation* variableDeclaratorId |
+  type RecordPatternBody
+}
+
+RecordPatternBody {
+  "(" commaSep<Pattern> ")"
 }
 
 LambdaExpression {
-  (Definition | FormalParameters | InferredParameters) "->" (expression | Block)
+  (Definition | FormalParameters | InferredParameters | LVTIParameters) "->" (expression | Block)
+}
+
+// Lambda with var-typed parameters: (var x, var y) -> ...
+LVTIParameters {
+  "(" commaSep1<LVTIParameter> ")"
+}
+
+LVTIParameter {
+  Modifiers? ckw<"var"> Definition
 }
 
 InferredParameters {
@@ -182,6 +204,43 @@ Dimension {
   annotation* !array "[" "]"
 }
 
+// SwitchExpression covers both switch-as-expression (Java 14+) and switch-as-statement.
+// [@isGroup=Statement] makes it also a member of the Statement group so it
+// can appear directly in the statement list without a semicolon.
+SwitchExpression[@dynamicPrecedence=1] {
+  kw<"switch"> ParenthesizedExpression SwitchBlock ~switch
+}
+
+SwitchBlock {
+  "{" (SwitchLabeledRule | SwitchLabel | statement)* "}"
+}
+
+// Colon-form label (traditional and new pattern style)
+SwitchLabel {
+  kw<"case"> (SwitchPattern ("," SwitchPattern)* WhenClause? | expression ("," kw<"default">)?) ":" |
+  kw<"default"> ":"
+}
+
+SwitchPattern {
+  Pattern
+}
+
+// when guard in switch patterns (Java 21+)
+WhenClause {
+  kw<"when"> expression
+}
+
+// Arrow-form rule (Java 14+)
+SwitchLabeledRule {
+  (kw<"case"> (SwitchPattern ("," SwitchPattern)* WhenClause? | expression ("," kw<"default">)?) |
+   kw<"default">)
+  "->" SwitchRuleOutcome
+}
+
+SwitchRuleOutcome {
+  Block | ExpressionStatement | ThrowStatement | YieldStatement
+}
+
 statement[@isGroup=Statement] {
   declaration |
   ExpressionStatement |
@@ -193,11 +252,12 @@ statement[@isGroup=Statement] {
   Block |
   ";" |
   AssertStatement |
-  SwitchStatement |
+  SwitchExpression ~switch |
   DoStatement |
   BreakStatement |
   ContinueStatement |
   ReturnStatement |
+  YieldStatement |
   SynchronizedStatement |
   LocalVariableDeclaration |
   ThrowStatement |
@@ -224,19 +284,6 @@ AssertStatement {
   kw<"assert"> expression ":" expression ";"
 }
 
-SwitchStatement {
-  kw<"switch"> ParenthesizedExpression SwitchBlock
-}
-
-SwitchBlock {
-  "{" (SwitchLabel | statement)* "}"
-}
-
-SwitchLabel {
-  kw<"case"> expression ":" |
-  kw<"default"> ":"
-}
-
 DoStatement {
   kw<"do"> statement kw<"while"> ParenthesizedExpression ";"
 }
@@ -251,6 +298,11 @@ ContinueStatement {
 
 ReturnStatement {
   kw<"return"> expression? ";"
+}
+
+// yield expression (Java 14+, inside switch expressions)
+YieldStatement {
+  kw<"yield"> expression ";"
 }
 
 SynchronizedStatement {
@@ -290,7 +342,7 @@ ResourceSpecification {
 }
 
 Resource {
-  Modifiers? unannotatedType variableDeclaratorId "=" expression |
+  Modifiers? (unannotatedType | ckw<"var">) variableDeclaratorId "=" expression |
   Identifier |
   FieldAccess
 }
@@ -314,7 +366,7 @@ ForStatement {
 EnhancedForStatement {
   kw<"for">
   ForSpec {
-    "(" Modifiers? unannotatedType variableDeclaratorId ":" expression ")"
+    "(" Modifiers? (unannotatedType | ckw<"var">) variableDeclaratorId ":" expression ")"
   }
   statement
 }
@@ -357,11 +409,12 @@ declaration {
   ClassDeclaration |
   InterfaceDeclaration |
   AnnotationTypeDeclaration |
-  EnumDeclaration
+  EnumDeclaration |
+  RecordDeclaration
 }
 
 ModuleDeclaration {
-  annotation* ckw<"open">? ckw<"module"> name ModuleBody
+  annotation* kw<"open">? kw<"module"> name ModuleBody
 }
 
 ModuleBody {
@@ -406,7 +459,29 @@ EnumConstant {
 }
 
 ClassDeclaration {
-  Modifiers? kw<"class"> Definition TypeParameters? Superclass? SuperInterfaces? ClassBody
+  Modifiers? kw<"class"> Definition TypeParameters? Superclass? SuperInterfaces? PermitsList? ClassBody
+}
+
+// Records (Java 16+)
+RecordDeclaration {
+  Modifiers? kw<"record"> Definition TypeParameters? RecordHeader SuperInterfaces? RecordBody
+}
+
+RecordHeader {
+  "(" commaSep<RecordComponent> ")"
+}
+
+RecordComponent {
+  type "..."? Definition
+}
+
+RecordBody {
+  "{" (classBodyDeclaration | CompactConstructorDeclaration)* "}"
+}
+
+// Compact constructor in records (no formal parameters)
+CompactConstructorDeclaration {
+  Modifiers? Definition ConstructorBody
 }
 
 Modifiers {
@@ -416,7 +491,7 @@ Modifiers {
 
 modifier {
   kw<"public"> | kw<"protected"> | kw<"private"> | kw<"abstract"> | kw<"static"> | kw<"final"> | kw<"strictfp"> |
-  kw<"default"> kw<"synchronized"> | kw<"native"> | kw<"transient"> | kw<"volatile">
+  kw<"default"> | kw<"synchronized"> | kw<"native"> | kw<"transient"> | kw<"volatile"> | kw<"sealed"> | "non-sealed"
 }
 
 TypeParameters {
@@ -443,6 +518,11 @@ InterfaceTypeList {
   commaSep1<type>
 }
 
+// permits clause for sealed classes/interfaces (Java 17+)
+PermitsList {
+  kw<"permits"> InterfaceTypeList
+}
+
 ClassBody {
   "{" classBodyDeclaration* "}"
 }
@@ -454,6 +534,7 @@ classBodyDeclaration {
   InterfaceDeclaration |
   AnnotationTypeDeclaration |
   EnumDeclaration |
+  RecordDeclaration |
   Block |
   StaticInitializer |
   ConstructorDeclaration |
@@ -516,7 +597,7 @@ defaultValue {
 }
 
 InterfaceDeclaration {
-  Modifiers? kw<"interface"> Definition TypeParameters? ExtendsInterfaces? InterfaceBody
+  Modifiers? kw<"interface"> Definition TypeParameters? ExtendsInterfaces? PermitsList? InterfaceBody
 }
 
 ExtendsInterfaces {
@@ -531,6 +612,7 @@ InterfaceBody {
     ClassDeclaration |
     InterfaceDeclaration |
     AnnotationTypeDeclaration |
+    RecordDeclaration |
     ";"
   )* "}"
 }
@@ -667,7 +749,7 @@ commaSepTrailing<expr> { (expr ("," expr?)*)? }
   IntegerLiteral {
     (digits |
      ("0x" | "0X") hexDigits |
-     ("0o" | "0O") $[0-7]+ ("_" $[0-7]+)* |
+     "0" $[0-7]+ ("_" $[0-7]+)* |
      ("0b" | "0B") $[01]+ ("_" $[01]+)*)
     ("l" | "L")?
   }
@@ -737,10 +819,13 @@ commaSepTrailing<expr> { (expr ("," expr?)*)? }
 
   @precedence { LineComment, times }
   @precedence { BlockComment, times }
+  @precedence { "non-sealed", identifier }
+
+  "non-sealed"
 
   "="[@name=AssignOp]
 
-  "{" "}" "(" ")" "[" "]" "." "," ";" ":"
+  "{" "}" "(" ")" "[" "]" "." "," ";" ":" "->"
 }
 
 @external propSource javaHighlighting from "./highlight"

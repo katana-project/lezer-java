@@ -1,0 +1,685 @@
+# switch statement arrow form
+
+switch (x) {
+    case 1 -> System.out.println("one");
+    case 2 -> System.out.println("two");
+    default -> System.out.println("other");
+}
+
+==>
+
+Program(
+  SwitchExpression(switch,
+    ParenthesizedExpression(Identifier),
+    SwitchBlock(
+      SwitchLabeledRule(case, IntegerLiteral,
+        SwitchRuleOutcome(ExpressionStatement(
+          MethodInvocation(
+            FieldAccess(Identifier, Identifier),
+            MethodName(Identifier),
+            ArgumentList(StringLiteral))))),
+      SwitchLabeledRule(case, IntegerLiteral,
+        SwitchRuleOutcome(ExpressionStatement(
+          MethodInvocation(
+            FieldAccess(Identifier, Identifier),
+            MethodName(Identifier),
+            ArgumentList(StringLiteral))))),
+      SwitchLabeledRule(default,
+        SwitchRuleOutcome(ExpressionStatement(
+          MethodInvocation(
+            FieldAccess(Identifier, Identifier),
+            MethodName(Identifier),
+            ArgumentList(StringLiteral))))))))
+
+
+# switch expression in variable initializer
+
+int result = switch (day) {
+    case MONDAY -> 6;
+    default     -> 8;
+};
+
+==>
+
+Program(
+  LocalVariableDeclaration(
+    PrimitiveType,
+    VariableDeclarator(
+      Definition,
+      AssignOp,
+      SwitchExpression(switch,
+        ParenthesizedExpression(Identifier),
+        SwitchBlock(
+          SwitchLabeledRule(case, Identifier,
+            SwitchRuleOutcome(ExpressionStatement(IntegerLiteral))),
+          SwitchLabeledRule(default,
+            SwitchRuleOutcome(ExpressionStatement(IntegerLiteral))))))))
+
+
+# switch expression assigned via assignment operator
+
+String label = switch (code) {
+    case 0 -> "zero";
+    default -> "unknown";
+};
+
+==>
+
+Program(
+  LocalVariableDeclaration(
+    TypeName,
+    VariableDeclarator(
+      Definition,
+      AssignOp,
+      SwitchExpression(switch,
+        ParenthesizedExpression(Identifier),
+        SwitchBlock(
+          SwitchLabeledRule(case, IntegerLiteral,
+            SwitchRuleOutcome(ExpressionStatement(StringLiteral))),
+          SwitchLabeledRule(default,
+            SwitchRuleOutcome(ExpressionStatement(StringLiteral))))))))
+
+
+# switch expression as method argument
+
+System.out.println(switch (x) {
+    case 1 -> "one";
+    default -> "other";
+});
+
+==>
+
+Program(
+  ExpressionStatement(MethodInvocation(
+    FieldAccess(Identifier, Identifier),
+    MethodName(Identifier),
+    ArgumentList(
+      SwitchExpression(switch,
+        ParenthesizedExpression(Identifier),
+        SwitchBlock(
+          SwitchLabeledRule(case, IntegerLiteral,
+            SwitchRuleOutcome(ExpressionStatement(StringLiteral))),
+          SwitchLabeledRule(default,
+            SwitchRuleOutcome(ExpressionStatement(StringLiteral)))))))))
+
+
+# switch rule with block outcome and yield
+
+int j = switch (day) {
+    case MONDAY -> 0;
+    default -> {
+        yield 1;
+    }
+};
+
+==>
+
+Program(
+  LocalVariableDeclaration(
+    PrimitiveType,
+    VariableDeclarator(
+      Definition,
+      AssignOp,
+      SwitchExpression(switch,
+        ParenthesizedExpression(Identifier),
+        SwitchBlock(
+          SwitchLabeledRule(case, Identifier,
+            SwitchRuleOutcome(ExpressionStatement(IntegerLiteral))),
+          SwitchLabeledRule(default,
+            SwitchRuleOutcome(Block(
+              YieldStatement(yield, IntegerLiteral)))))))))
+
+
+# switch rule with throw outcome
+
+switch (day) {
+    case MONDAY -> System.out.println("work");
+    default -> throw new IllegalArgumentException("bad");
+}
+
+==>
+
+Program(
+  SwitchExpression(switch,
+    ParenthesizedExpression(Identifier),
+    SwitchBlock(
+      SwitchLabeledRule(case, Identifier,
+        SwitchRuleOutcome(ExpressionStatement(
+          MethodInvocation(
+            FieldAccess(Identifier, Identifier),
+            MethodName(Identifier),
+            ArgumentList(StringLiteral))))),
+      SwitchLabeledRule(default,
+        SwitchRuleOutcome(ThrowStatement(throw,
+          ObjectCreationExpression(new,
+            TypeName,
+            ArgumentList(StringLiteral))))))))
+
+
+# switch colon form with traditional labels
+
+switch (x) {
+    case 1:
+        foo();
+        break;
+    case 2:
+        bar();
+        break;
+    default:
+        baz();
+}
+
+==>
+
+Program(
+  SwitchExpression(switch,
+    ParenthesizedExpression(Identifier),
+    SwitchBlock(
+      SwitchLabel(case, IntegerLiteral),
+      ExpressionStatement(MethodInvocation(MethodName(Identifier), ArgumentList)),
+      BreakStatement(break),
+      SwitchLabel(case, IntegerLiteral),
+      ExpressionStatement(MethodInvocation(MethodName(Identifier), ArgumentList)),
+      BreakStatement(break),
+      SwitchLabel(default),
+      ExpressionStatement(MethodInvocation(MethodName(Identifier), ArgumentList)))))
+
+
+# yield statement
+
+int x = switch (n) {
+    default -> {
+        yield n * 2;
+    }
+};
+
+==>
+
+Program(
+  LocalVariableDeclaration(
+    PrimitiveType,
+    VariableDeclarator(
+      Definition,
+      AssignOp,
+      SwitchExpression(switch,
+        ParenthesizedExpression(Identifier),
+        SwitchBlock(
+          SwitchLabeledRule(default,
+            SwitchRuleOutcome(Block(
+              YieldStatement(yield,
+                BinaryExpression(Identifier, ArithOp, IntegerLiteral))))))))))
+
+
+# switch with null case colon form
+
+switch (s) {
+    case null:
+        System.out.println("null");
+        break;
+    default:
+        break;
+}
+
+==>
+
+Program(
+  SwitchExpression(switch,
+    ParenthesizedExpression(Identifier),
+    SwitchBlock(
+      SwitchLabel(case, null),
+      ExpressionStatement(MethodInvocation(
+        FieldAccess(Identifier, Identifier),
+        MethodName(Identifier),
+        ArgumentList(StringLiteral))),
+      BreakStatement(break),
+      SwitchLabel(default),
+      BreakStatement(break))))
+
+
+# switch with null case arrow form
+
+switch (obj) {
+    case null -> System.out.println("null");
+    case Integer i -> System.out.println("int");
+    default -> System.out.println("other");
+}
+
+==>
+
+Program(
+  SwitchExpression(switch,
+    ParenthesizedExpression(Identifier),
+    SwitchBlock(
+      SwitchLabeledRule(case, null,
+        SwitchRuleOutcome(ExpressionStatement(
+          MethodInvocation(
+            FieldAccess(Identifier, Identifier),
+            MethodName(Identifier),
+            ArgumentList(StringLiteral))))),
+      SwitchLabeledRule(case,
+        SwitchPattern(Pattern(TypeName, Definition)),
+        SwitchRuleOutcome(ExpressionStatement(
+          MethodInvocation(
+            FieldAccess(Identifier, Identifier),
+            MethodName(Identifier),
+            ArgumentList(StringLiteral))))),
+      SwitchLabeledRule(default,
+        SwitchRuleOutcome(ExpressionStatement(
+          MethodInvocation(
+            FieldAccess(Identifier, Identifier),
+            MethodName(Identifier),
+            ArgumentList(StringLiteral))))))))
+
+
+# switch with when guard
+
+switch (obj) {
+    case Integer i when i > 0 -> System.out.println("positive");
+    case Integer i when i < 0 -> System.out.println("negative");
+    default -> System.out.println("other");
+}
+
+==>
+
+Program(
+  SwitchExpression(switch,
+    ParenthesizedExpression(Identifier),
+    SwitchBlock(
+      SwitchLabeledRule(case,
+        SwitchPattern(Pattern(TypeName, Definition)),
+        WhenClause(when, BinaryExpression(Identifier, CompareOp, IntegerLiteral)),
+        SwitchRuleOutcome(ExpressionStatement(
+          MethodInvocation(
+            FieldAccess(Identifier, Identifier),
+            MethodName(Identifier),
+            ArgumentList(StringLiteral))))),
+      SwitchLabeledRule(case,
+        SwitchPattern(Pattern(TypeName, Definition)),
+        WhenClause(when, BinaryExpression(Identifier, CompareOp, IntegerLiteral)),
+        SwitchRuleOutcome(ExpressionStatement(
+          MethodInvocation(
+            FieldAccess(Identifier, Identifier),
+            MethodName(Identifier),
+            ArgumentList(StringLiteral))))),
+      SwitchLabeledRule(default,
+        SwitchRuleOutcome(ExpressionStatement(
+          MethodInvocation(
+            FieldAccess(Identifier, Identifier),
+            MethodName(Identifier),
+            ArgumentList(StringLiteral))))))))
+
+
+# switch with type pattern colon form
+
+switch (obj) {
+    case Integer i:
+        System.out.println(i);
+        break;
+    case String s:
+        System.out.println(s);
+        break;
+    default:
+        break;
+}
+
+==>
+
+Program(
+  SwitchExpression(switch,
+    ParenthesizedExpression(Identifier),
+    SwitchBlock(
+      SwitchLabel(case, SwitchPattern(Pattern(TypeName, Definition))),
+      ExpressionStatement(MethodInvocation(
+        FieldAccess(Identifier, Identifier),
+        MethodName(Identifier),
+        ArgumentList(Identifier))),
+      BreakStatement(break),
+      SwitchLabel(case, SwitchPattern(Pattern(TypeName, Definition))),
+      ExpressionStatement(MethodInvocation(
+        FieldAccess(Identifier, Identifier),
+        MethodName(Identifier),
+        ArgumentList(Identifier))),
+      BreakStatement(break),
+      SwitchLabel(default),
+      BreakStatement(break))))
+
+
+# multiple patterns in one case
+
+switch (obj) {
+    case Integer i, Long l -> System.out.println("number");
+    default -> System.out.println("other");
+}
+
+==>
+
+Program(
+  SwitchExpression(switch,
+    ParenthesizedExpression(Identifier),
+    SwitchBlock(
+      SwitchLabeledRule(case,
+        SwitchPattern(Pattern(TypeName, Definition)),
+        SwitchPattern(Pattern(TypeName, Definition)),
+        SwitchRuleOutcome(ExpressionStatement(
+          MethodInvocation(
+            FieldAccess(Identifier, Identifier),
+            MethodName(Identifier),
+            ArgumentList(StringLiteral))))),
+      SwitchLabeledRule(default,
+        SwitchRuleOutcome(ExpressionStatement(
+          MethodInvocation(
+            FieldAccess(Identifier, Identifier),
+            MethodName(Identifier),
+            ArgumentList(StringLiteral))))))))
+
+
+# instanceof pattern matching
+
+if (obj instanceof String s) {
+    System.out.println(s.length());
+}
+
+==>
+
+Program(
+  IfStatement(if,
+    ParenthesizedExpression(
+      InstanceofExpression(
+        Identifier,
+        instanceof,
+        Pattern(TypeName, Definition))),
+    Block(
+      ExpressionStatement(MethodInvocation(
+        FieldAccess(Identifier, Identifier),
+        MethodName(Identifier),
+        ArgumentList(MethodInvocation(Identifier, MethodName(Identifier), ArgumentList)))))))
+
+
+# instanceof pattern matching with annotated type
+
+if (obj instanceof @NonNull String s) {
+    System.out.println(s);
+}
+
+==>
+
+Program(
+  IfStatement(if,
+    ParenthesizedExpression(
+      InstanceofExpression(
+        Identifier,
+        instanceof,
+        Pattern(
+          AnnotatedType(
+            MarkerAnnotation(Identifier),
+            TypeName),
+          Definition))),
+    Block(
+      ExpressionStatement(MethodInvocation(
+        FieldAccess(Identifier, Identifier),
+        MethodName(Identifier),
+        ArgumentList(Identifier))))))
+
+
+# record declaration
+
+record Point(int x, int y) {}
+
+==>
+
+Program(
+  RecordDeclaration(record,
+    Definition,
+    RecordHeader(
+      RecordComponent(PrimitiveType, Definition),
+      RecordComponent(PrimitiveType, Definition)),
+    RecordBody))
+
+
+# record declaration with implements
+
+public record Range(int lo, int hi) implements Comparable<Range> {
+    public int compareTo(Range other) {
+        return this.lo - other.lo;
+    }
+}
+
+==>
+
+Program(
+  RecordDeclaration(
+    Modifiers(public),
+    record,
+    Definition,
+    RecordHeader(
+      RecordComponent(PrimitiveType, Definition),
+      RecordComponent(PrimitiveType, Definition)),
+    SuperInterfaces(implements,
+      InterfaceTypeList(
+        GenericType(TypeName, TypeArguments(TypeName)))),
+    RecordBody(
+      MethodDeclaration(
+        Modifiers(public),
+        PrimitiveType,
+        Definition,
+        FormalParameters(
+          FormalParameter(TypeName, Definition)),
+        Block(
+          ReturnStatement(return,
+            BinaryExpression(
+              FieldAccess(this, Identifier),
+              ArithOp,
+              FieldAccess(Identifier, Identifier))))))))
+
+
+# record with generic type parameter
+
+record Pair<A, B>(A first, B second) {}
+
+==>
+
+Program(
+  RecordDeclaration(
+    record,
+    Definition,
+    TypeParameters(
+      TypeParameter(Definition),
+      TypeParameter(Definition)),
+    RecordHeader(
+      RecordComponent(TypeName, Definition),
+      RecordComponent(TypeName, Definition)),
+    RecordBody))
+
+
+# record with varargs component
+
+record Varargs(int... values) {}
+
+==>
+
+Program(
+  RecordDeclaration(
+    record,
+    Definition,
+    RecordHeader(
+      RecordComponent(PrimitiveType, Definition)),
+    RecordBody))
+
+
+# record with compact constructor
+
+record Range(int lo, int hi) {
+    Range {
+        if (lo > hi) throw new IllegalArgumentException();
+    }
+}
+
+==>
+
+Program(
+  RecordDeclaration(
+    record,
+    Definition,
+    RecordHeader(
+      RecordComponent(PrimitiveType, Definition),
+      RecordComponent(PrimitiveType, Definition)),
+    RecordBody(
+      CompactConstructorDeclaration(
+        Definition,
+        ConstructorBody(
+          IfStatement(if,
+            ParenthesizedExpression(
+              BinaryExpression(Identifier, CompareOp, Identifier)),
+            ThrowStatement(throw,
+              ObjectCreationExpression(new,
+                TypeName,
+                ArgumentList))))))))
+
+
+# sealed class with permits
+
+public sealed class Shape permits Circle, Rectangle, Triangle {}
+
+==>
+
+Program(
+  ClassDeclaration(
+    Modifiers(public, sealed),
+    class,
+    Definition,
+    PermitsList(permits,
+      InterfaceTypeList(TypeName, TypeName, TypeName)),
+    ClassBody))
+
+
+# sealed interface with permits
+
+public sealed interface Expr permits Num, Add {}
+
+==>
+
+Program(
+  InterfaceDeclaration(
+    Modifiers(public, sealed),
+    interface,
+    Definition,
+    PermitsList(permits,
+      InterfaceTypeList(TypeName, TypeName)),
+    InterfaceBody))
+
+
+# record pattern in instanceof
+
+if (obj instanceof Point(int x, int y)) {
+    System.out.println(x + y);
+}
+
+==>
+
+Program(
+  IfStatement(if,
+    ParenthesizedExpression(
+      InstanceofExpression(
+        Identifier,
+        instanceof,
+        Pattern(
+          TypeName,
+          RecordPatternBody(
+            Pattern(PrimitiveType, Definition),
+            Pattern(PrimitiveType, Definition))))),
+    Block(
+      ExpressionStatement(MethodInvocation(
+        FieldAccess(Identifier, Identifier),
+        MethodName(Identifier),
+        ArgumentList(BinaryExpression(Identifier, ArithOp, Identifier)))))))
+
+
+# lambda with var parameters
+
+Comparator<String> c = (var a, var b) -> a.compareTo(b);
+
+==>
+
+Program(
+  LocalVariableDeclaration(
+    GenericType(TypeName, TypeArguments(TypeName)),
+    VariableDeclarator(
+      Definition,
+      AssignOp,
+      LambdaExpression(
+        LVTIParameters(
+          LVTIParameter(var, Definition),
+          LVTIParameter(var, Definition)),
+        MethodInvocation(Identifier, MethodName(Identifier), ArgumentList(Identifier))))))
+
+
+# non-sealed class
+
+public non-sealed class Circle extends Shape {}
+
+==>
+
+Program(
+  ClassDeclaration(
+    Modifiers(public, "non-sealed"),
+    class,
+    Definition,
+    Superclass(extends, TypeName),
+    ClassBody))
+
+
+# non-sealed class without other modifiers
+
+non-sealed class Circle extends Shape {}
+
+==>
+
+Program(
+  ClassDeclaration(
+    Modifiers("non-sealed"),
+    class,
+    Definition,
+    Superclass(extends, TypeName),
+    ClassBody))
+
+
+# case null, default arrow form
+
+switch (obj) {
+    case null, default -> System.out.println("null or other");
+}
+
+==>
+
+Program(
+  SwitchExpression(switch,
+    ParenthesizedExpression(Identifier),
+    SwitchBlock(
+      SwitchLabeledRule(case, null, default,
+        SwitchRuleOutcome(ExpressionStatement(
+          MethodInvocation(
+            FieldAccess(Identifier, Identifier),
+            MethodName(Identifier),
+            ArgumentList(StringLiteral))))))))
+
+
+# case null, default colon form
+
+switch (obj) {
+    case null, default:
+        System.out.println("null or other");
+        break;
+}
+
+==>
+
+Program(
+  SwitchExpression(switch,
+    ParenthesizedExpression(Identifier),
+    SwitchBlock(
+      SwitchLabel(case, null, default),
+      ExpressionStatement(MethodInvocation(
+        FieldAccess(Identifier, Identifier),
+        MethodName(Identifier),
+        ArgumentList(StringLiteral))),
+      BreakStatement(break))))
