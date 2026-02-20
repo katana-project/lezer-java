@@ -1,6 +1,6 @@
 {
   "name": "@run-slicer/lezer-java",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "lezer-based Java grammar",
   "main": "dist/index.cjs",
   "type": "module",
@@ -31,7 +31,7 @@
   },
   "repository": {
     "type" : "git",
-    "url" : "https://github.com/lezer-parser/java.git"
+    "url" : "git+https://github.com/katana-project/lezer-java.git"
   },
   "scripts": {
     "build": "lezer-generator src/java.grammar -o src/parser && rollup -c",

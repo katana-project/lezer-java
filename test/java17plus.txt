@@ -683,3 +683,225 @@ Program(
         MethodName(Identifier),
         ArgumentList(StringLiteral))),
       BreakStatement(break))))
+
+
+# unnamed variable in local variable declaration
+
+int _ = compute();
+
+==>
+
+Program(
+  LocalVariableDeclaration(
+    PrimitiveType,
+    VariableDeclarator(
+      Definition,
+      AssignOp,
+      MethodInvocation(MethodName(Identifier), ArgumentList))))
+
+
+# unnamed variable in enhanced for loop
+
+for (var _ : items) {
+    count++;
+}
+
+==>
+
+Program(
+  EnhancedForStatement(for,
+    ForSpec(var, Definition, Identifier),
+    Block(
+      ExpressionStatement(UpdateExpression(Identifier, UpdateOp)))))
+
+
+# unnamed variable in try-with-resources
+
+try (var _ = lock.acquire()) {
+    doWork();
+}
+
+==>
+
+Program(
+  TryWithResourcesStatement(try,
+    ResourceSpecification(
+      Resource(var, Definition, AssignOp,
+        MethodInvocation(
+          Identifier,
+          MethodName(Identifier),
+          ArgumentList))),
+    Block(
+      ExpressionStatement(MethodInvocation(MethodName(Identifier), ArgumentList)))))
+
+
+# unnamed variable in catch clause
+
+try {
+    riskyOp();
+} catch (Exception _) {
+    log();
+}
+
+==>
+
+Program(
+  TryStatement(try,
+    Block(
+      ExpressionStatement(MethodInvocation(MethodName(Identifier), ArgumentList))),
+    CatchClause(catch,
+      CatchFormalParameter(CatchType(TypeName), Definition),
+      Block(
+        ExpressionStatement(MethodInvocation(MethodName(Identifier), ArgumentList))))))
+
+
+# unnamed pattern in instanceof
+
+if (obj instanceof Foo _) {
+    doSomething();
+}
+
+==>
+
+Program(
+  IfStatement(if,
+    ParenthesizedExpression(
+      InstanceofExpression(
+        Identifier,
+        instanceof,
+        Pattern(TypeName, Definition))),
+    Block(
+      ExpressionStatement(MethodInvocation(MethodName(Identifier), ArgumentList)))))
+
+
+# unnamed pattern in switch arrow form
+
+switch (obj) {
+    case Integer _ -> System.out.println("int");
+    default -> System.out.println("other");
+}
+
+==>
+
+Program(
+  SwitchExpression(switch,
+    ParenthesizedExpression(Identifier),
+    SwitchBlock(
+      SwitchLabeledRule(case,
+        SwitchPattern(Pattern(TypeName, Definition)),
+        SwitchRuleOutcome(ExpressionStatement(
+          MethodInvocation(
+            FieldAccess(Identifier, Identifier),
+            MethodName(Identifier),
+            ArgumentList(StringLiteral))))),
+      SwitchLabeledRule(default,
+        SwitchRuleOutcome(ExpressionStatement(
+          MethodInvocation(
+            FieldAccess(Identifier, Identifier),
+            MethodName(Identifier),
+            ArgumentList(StringLiteral))))))))
+
+
+# unnamed pattern in switch colon form
+
+switch (obj) {
+    case String _:
+        handle();
+        break;
+    default:
+        break;
+}
+
+==>
+
+Program(
+  SwitchExpression(switch,
+    ParenthesizedExpression(Identifier),
+    SwitchBlock(
+      SwitchLabel(case, SwitchPattern(Pattern(TypeName, Definition))),
+      ExpressionStatement(MethodInvocation(MethodName(Identifier), ArgumentList)),
+      BreakStatement(break),
+      SwitchLabel(default),
+      BreakStatement(break))))
+
+
+# unnamed variable in record deconstruction pattern
+
+switch (shape) {
+    case Circle(double _) -> System.out.println("circle");
+    case Circle(_) -> System.out.println("circle");
+    case Rectangle(_, double _) -> System.out.println("rect");
+    case Rectangle(_, _) -> System.out.println("rect");
+}
+
+==>
+
+Program(
+  SwitchExpression(switch,
+    ParenthesizedExpression(Identifier),
+    SwitchBlock(
+      SwitchLabeledRule(case,
+        SwitchPattern(Pattern(TypeName,
+          RecordPatternBody(
+            Pattern(PrimitiveType, Definition)))),
+        SwitchRuleOutcome(ExpressionStatement(
+          MethodInvocation(
+            FieldAccess(Identifier, Identifier),
+            MethodName(Identifier),
+            ArgumentList(StringLiteral))))),
+      SwitchLabeledRule(case,
+        SwitchPattern(Pattern(TypeName,
+          RecordPatternBody(
+            Pattern(UnnamedPatternVariable)))),
+        SwitchRuleOutcome(ExpressionStatement(
+          MethodInvocation(
+            FieldAccess(Identifier, Identifier),
+            MethodName(Identifier),
+            ArgumentList(StringLiteral))))),
+      SwitchLabeledRule(case,
+        SwitchPattern(Pattern(TypeName,
+          RecordPatternBody(
+            Pattern(UnnamedPatternVariable),
+            Pattern(PrimitiveType, Definition)))),
+        SwitchRuleOutcome(ExpressionStatement(
+          MethodInvocation(
+            FieldAccess(Identifier, Identifier),
+            MethodName(Identifier),
+            ArgumentList(StringLiteral))))),
+      SwitchLabeledRule(case,
+        SwitchPattern(Pattern(TypeName,
+          RecordPatternBody(
+            Pattern(UnnamedPatternVariable),
+            Pattern(UnnamedPatternVariable)))),
+        SwitchRuleOutcome(ExpressionStatement(
+          MethodInvocation(
+            FieldAccess(Identifier, Identifier),
+            MethodName(Identifier),
+            ArgumentList(StringLiteral))))))))
+
+
+
+# unnamed variable in record deconstruction instanceof
+
+if (p instanceof Point(int _, int y)) {
+    System.out.println(y);
+}
+
+==>
+
+Program(
+  IfStatement(if,
+    ParenthesizedExpression(
+      InstanceofExpression(
+        Identifier,
+        instanceof,
+        Pattern(
+          TypeName,
+          RecordPatternBody(
+            Pattern(PrimitiveType, Definition),
+            Pattern(PrimitiveType, Definition))))),
+    Block(
+      ExpressionStatement(MethodInvocation(
+        FieldAccess(Identifier, Identifier),
+        MethodName(Identifier),
+        ArgumentList(Identifier))))))
